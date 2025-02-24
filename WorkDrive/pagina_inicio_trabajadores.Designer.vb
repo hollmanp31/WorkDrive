@@ -61,6 +61,7 @@ Partial Class pagina_inicio_trabajadores
         TxtDescripcion = New TextBox()
         txtDireccionActual = New TextBox()
         txtDireccion = New TextBox()
+        mapa = New Microsoft.Web.WebView2.WinForms.WebView2()
         Panel1.SuspendLayout()
         CType(PictureBox15, ComponentModel.ISupportInitialize).BeginInit()
         Panel6.SuspendLayout()
@@ -79,10 +80,10 @@ Partial Class pagina_inicio_trabajadores
         CType(PictureBox5, ComponentModel.ISupportInitialize).BeginInit()
         CType(PictureBox4, ComponentModel.ISupportInitialize).BeginInit()
         CType(PictureBox3, ComponentModel.ISupportInitialize).BeginInit()
-        CType(mapa, ComponentModel.ISupportInitialize).BeginInit()
         Panel3.SuspendLayout()
         CType(PictureBox2, ComponentModel.ISupportInitialize).BeginInit()
         CType(PictureBox1, ComponentModel.ISupportInitialize).BeginInit()
+        CType(mapa, ComponentModel.ISupportInitialize).BeginInit()
         SuspendLayout()
         ' 
         ' Panel1
@@ -498,12 +499,25 @@ Partial Class pagina_inicio_trabajadores
         txtDireccion.PlaceholderText = "Direccion"
         txtDireccion.Size = New Size(170, 32)
         txtDireccion.TabIndex = 0
+        '
+        ' mapa
+        ' 
+        mapa.AllowExternalDrop = True
+        mapa.CreationProperties = Nothing
+        mapa.DefaultBackgroundColor = Color.White
+        mapa.Location = New Point(337, 0)
+        mapa.Margin = New Padding(4, 5, 4, 5)
+        mapa.Name = "mapa"
+        mapa.Size = New Size(739, 1062)
+        mapa.TabIndex = 0
+        mapa.ZoomFactor = 1.0R
         ' 
         ' pagina_inicio_trabajadores
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
         ClientSize = New Size(965, 636)
+        Controls.Add(mapa)
         Controls.Add(Panel3)
         Controls.Add(mapa)
         Controls.Add(Panel1)
@@ -533,14 +547,17 @@ Partial Class pagina_inicio_trabajadores
         CType(PictureBox5, ComponentModel.ISupportInitialize).EndInit()
         CType(PictureBox4, ComponentModel.ISupportInitialize).EndInit()
         CType(PictureBox3, ComponentModel.ISupportInitialize).EndInit()
-        CType(mapa, ComponentModel.ISupportInitialize).EndInit()
+
         Panel3.ResumeLayout(False)
         Panel3.PerformLayout()
         CType(PictureBox2, ComponentModel.ISupportInitialize).EndInit()
         CType(PictureBox1, ComponentModel.ISupportInitialize).EndInit()
+        CType(mapa, ComponentModel.ISupportInitialize).EndInit()
         ResumeLayout(False)
     End Sub
 
+    Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
+    Friend WithEvents BackgroundWorker2 As System.ComponentModel.BackgroundWorker
     Friend WithEvents Panel1 As Panel
     Friend WithEvents PictureBox15 As PictureBox
     Friend WithEvents Panel6 As Panel

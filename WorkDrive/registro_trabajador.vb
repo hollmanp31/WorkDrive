@@ -2,13 +2,20 @@
 Imports System.Reflection.Emit
 
 Public Class registro_trabajador
+    Private placeholder As Object
+    Public Property Nombre As String
+    Public Property Apellidos As String
+    Public Property Email As String
+    Public Property Password As String
+    Public Property Tipo_usuario As Integer
+    Public Property Id_Empleado As Integer
 
-    Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox1.SelectedIndexChanged
-        ' Código para manejar el cambio en ComboBox1
+    Private Sub cmbBSalario_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbBlabor.SelectedIndexChanged
+        placeholder = "Seleccione su Salario Promedio"
     End Sub
 
-    Private Sub ComboBox2_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox2.SelectedIndexChanged
-        ' Código para manejar el cambio en ComboBox2
+    Private Sub cmbBSexo_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbBsexo.SelectedIndexChanged
+        placeholder = "Seleccione su Sexo"
     End Sub
 
     Private Sub cargar_archivo_Click(sender As Object, e As EventArgs) Handles cargar_archivo.Click
@@ -25,7 +32,7 @@ Public Class registro_trabajador
 
     End Sub
 
-    Private Sub cargar_archivo2_Click(sender As Object, e As EventArgs) Handles cargar_archivo2.Click
+    Private Sub cargar_archivo2_Click(sender As Object, e As EventArgs) Handles BtnCertificado.Click
 
         Dim openFileDialog As New OpenFileDialog()
 
@@ -58,11 +65,32 @@ Public Class registro_trabajador
 
         Button1.Invalidate()
 
+        cmbBlabor.Items.Clear() ' Limpiar elementos existentes (opcional) 
+
+        cmbBsexo.Items.Clear() ' Limpiar elementos existentes (opcional)
+        'cmbBsexo.Items.Add("Seleccione su tipode sexo")
+        cmbBsexo.Items.Add("Masculino")
+        cmbBsexo.Items.Add("femenino")
+        cmbBsexo.Items.Add("Prefiero no decirlo")
+        cmbBsexo.Items.Add("otro")
+
+        cmbBlabor.Items.Clear() ' Limpiar elementos existentes (opcional) 
+        'cmbBSalario.Items.Add("Seleccione su salario")
+        cmbBSalario.Items.Add("Menos de 1 SMMLV")
+        cmbBSalario.Items.Add("1 SMMLV")
+        cmbBSalario.Items.Add("2 SMMLV")
+        cmbBSalario.Items.Add("3 SMMLV")
+        cmbBSalario.Items.Add("4 SMMLV")
+        cmbBSalario.Items.Add("5 SMMLV o mas")
+
+    End Sub
+
+    Private Sub Panel1_Paint(sender As Object, e As PaintEventArgs) Handles Panel1.Paint
+
     End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        form_foto.Show()
-    End Sub
 
+    End Sub
 End Class
 

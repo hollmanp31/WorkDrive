@@ -1,10 +1,26 @@
 ﻿Imports System.Drawing.Drawing2D
 Imports System.Text.RegularExpressions
 Imports System.Windows.Forms.VisualStyles.VisualStyleElement.Status
-Imports mysql.Data
+Imports MySql.Data
 Imports MySql.Data.MySqlClient
 Public Class login
+    Dim C_validaciones As New Validaciones
+    Private Sub TextBox_KeyPress(sender As Object, e As KeyPressEventArgs) Handles Button1.KeyPress, TxtNombre.KeyPress, TxtContraseña.KeyPress
+        If e.KeyChar = ChrW(Keys.Enter) Then
+            e.Handled = True
+            SelectNextControl(ActiveControl, True, True, True, True)
+
+            'Si el control actual es el último campo, simula el clic en el botón
+            If ActiveControl Is TxtNombre.Text Then ' Reemplaza TxtUltimoCampo con el nombre real del último campo
+                Button1.PerformClick()
+            End If
+        End If
+    End Sub
     Private reg As Object
+    Private reader As Object
+    Private toolTipInfo As Object
+    Private consultasql As String
+
 
     Private Sub login_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Panel2.BackColor = Color.FromArgb(180, 0, 0, 0)
@@ -16,7 +32,7 @@ Public Class login
     End Sub
 
     Private Sub Button1_Paint(sender As Object, e As PaintEventArgs) Handles Button1.Paint
-        Using brush As New LinearGradientBrush(Button1.ClientRectangle, Color.DarkBlue, Color.DarkRed, 0.0F) ' De izquierda a derecha
+        Using brush As New LinearGradientBrush(Button1.ClientRectangle, Color.DarkBlue, Color.MediumPurple, 0.0F) ' De izquierda a derecha
             e.Graphics.FillRectangle(brush, Button1.ClientRectangle)
         End Using
 
@@ -25,89 +41,134 @@ Public Class login
 
     Private Sub LinkLabel1_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkLabel1.LinkClicked
         registro.Show()
-        Me.Hide()
+        Hide()
     End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         ' 1. Obtener correo y contraseña de los TextBox
-        Dim correo As String = TxtEmail.Text
-        Dim contraseña As String = TxtPassword.Text
+        Dim Nombre = TxtNombre.Text
+        Dim Contraseña = TxtContraseña.Text
+
+        ' Hashear la contraseña
+        Dim contraseñaHasheada As String = C_validaciones.HashContraseña(TxtContraseña.Text)
 
         ' 2. Validar que no estén vacíos y que el correo tenga un formato válido
-        If String.IsNullOrEmpty(correo) OrElse String.IsNullOrEmpty(contraseña) Then
-            MessageBox.Show("Ingrese correo y contraseña.", "Error")
-            Return ' Salir del evento si hay campos vacíos
-        End If
+        If (TxtNombre.Text = "" Or TxtContraseña.Text = "") Then
+            MessageBox.Show("Faltan datos por ingresar", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+        Else
+            If (ConexionBD()) Then ' Si hay conexión a la BD...
+                consultasql = "SELECT U.usuario, U.Password FROM usuarios U WHERE 1"
+                Dim cmd As New MySqlCommand(consultasql, conexion)
+                cmd.Parameters.AddWithValue("@Nombre", Nombre)
+                cmd.Parameters.AddWithValue("@Password", contraseñaHasheada)
+                reader = Leer_Registro(consultasql)
+                If reader.Read Then ' Si se encontraron resultados... 
+                    'If (ValidarInicioSesion()) Then
+                    '(TxtEmail.Text) And (TxtContraseña.Text) 
+                    'End If
+                    TxtNombre.Text = reader("Nombre").ToString
 
-        If Not ValidarCorreo(correo) Then
-            MessageBox.Show("El correo electrónico no tiene un formato válido.", "Error")
-            Return ' Salir del evento si el formato del correo es inválido
-        End If
+                    TxtContraseña.Text = reader("Contraseña").ToString
+                    MsgBox("Bienvenido: " & TxtNombre.Text)  ' Mostrar mensaje de bienvenida 
+                    reader.Close() ' Cerrar lector de datos 
 
-        Using conexion As New MySqlConnection("server=localhost;database=workdrive;user id=root;")
-
-            Try
-                ' 3. Abrir conexión a la base de datos
-                conexion.Open()
-
-                ' 4. Crear comando SQL parametrizado (PREVIENE INYECCIÓN DE SQL)
-                Dim stm As String = "SELECT * FROM usuarios WHERE Email = @correo AND contraseña = @contraseña"
-                Dim cmd As New MySqlCommand(stm, conexion)
-                cmd.Parameters.AddWithValue("@correo", correo)
-                cmd.Parameters.AddWithValue("@contraseña", contraseña)
-
-                ' 5. Ejecutar consulta y leer resultados
-                Dim reg As MySqlDataReader = cmd.ExecuteReader()
-
-                If reg.Read() Then ' Si se encontraron resultados...
-                    Dim Nombre As String = reg.GetString("Usuario")
-
-                    ' 6. Mostrar mensaje de éxito
-                    MessageBox.Show("¡Bienvenido, " & Nombre & "!", "Éxito")
-
-                    ' 7. (Opcional) Abrir otro formulario, etc. 
-                    Me.Hide()
-                    Dim nuevoFormulario As New pagina_inicio()
-                    nuevoFormulario.Show()
-                Else ' Si no se encontraron resultados...
-                    ' 8. Mostrar mensaje de error
-                    MessageBox.Show("Correo o contraseña incorrectos.", "Error")
+                    pagina_inicio.Show() ' Mostrar formulario de inicio
+                    Hide() ' Ocultar formulario actual
+                Else
+                    MessageBox.Show("Usuario o contraseña incorrectos", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error) ' Si no se encontraron resultados...
                 End If
+            Else
+                ' Si no se encontraron resultados...
 
-                ' 9. Cerrar conexión y lector
-                reg.Close()
-                conexion.Close()
+                MessageBox.Show("No't exists connection with BD, Inform to Administrator.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+        End If
+        'If Not ValidarCorreo(Email) Then
+        'MessageBox.Show("El correo electrónico no tiene un formato válido.", "Error")
+        'Return ' Salir del evento si el formato del correo es inválido
+        'End If
 
-            Catch ex As MySqlException  ' Captura excepciones de MySQL
-                MessageBox.Show("Error de base de datos: " & ex.Message, "Error")
-                ' Aquí podrías registrar el error en un archivo o base de datos para depuración
 
-            Catch ex As InvalidCastException ' Captura error si los tipos de datos no coinciden
-                MessageBox.Show("Error en los datos recuperados: " & ex.Message, "Error")
 
-            Catch ex As Exception ' Captura cualquier otra excepción (debe ir al final)
-                MessageBox.Show("Error inesperado: " & ex.Message, "Error")
-                ' También podrías registrar este error genérico
 
-            Finally
-                ' 9. Cerrar conexión y lector (siempre se ejecutan)
-                If reg IsNot Nothing Then reg.Close() ' Verifica que reg no sea Nothing
-                If conexion.State = ConnectionState.Open Then conexion.Close() ' Verifica el estado antes de cerrar
-            End Try
-        End Using
+
+
+
+
     End Sub
 
-    Function ValidarCorreo(ByVal correo As String) As Boolean
+    Function ValidarCorreo(ByVal Email As String) As Boolean
         Dim regex As New Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-        Return regex.IsMatch(correo)
+        Return regex.IsMatch(Email)
     End Function
 
 
     Private Sub Panel1_Paint(sender As Object, e As PaintEventArgs) Handles Panel1.Paint
-
+        Dim rutaImagen = "C:\Users\Palma\Desktop\Fondo.jpg"
     End Sub
 
     Private Sub Label10_Click(sender As Object, e As EventArgs)
 
     End Sub
+
+    Private Sub Label5_Click(sender As Object, e As EventArgs)
+
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs)
+
+    End Sub
+
+    Private Sub Panel3_Paint(sender As Object, e As PaintEventArgs)
+
+    End Sub
+
+    Private Sub Label5_Click_1(sender As Object, e As EventArgs) Handles Label5.Click
+
+    End Sub
+
+    Private Sub Panel2_Paint(sender As Object, e As PaintEventArgs) Handles Panel2.Paint
+
+    End Sub
+
+    Private Sub TxtEmail_Enter(sender As Object, e As EventArgs) Handles TxtNombre.Enter, TxtContraseña.Enter
+
+    End Sub
+
+    Private Sub TxtEmail_TextChanged(sender As Object, e As EventArgs) Handles TxtNombre.TextChanged
+
+    End Sub
+
+    Private Sub TxtEmail_TabIndexChanged(sender As Object, e As EventArgs) Handles TxtNombre.TabIndexChanged
+
+    End Sub
+
+    Private Sub TxtEmail_MouseEnter(sender As Object, e As EventArgs) Handles TxtNombre.MouseEnter
+
+    End Sub
+
+    Private Sub TxtContraseña_TextChanged(sender As Object, e As EventArgs) Handles TxtContraseña.TextChanged
+
+    End Sub
+
+    Private Sub TxtEmail_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtNombre.KeyPress
+
+
+
+
+    End Sub
+
+    Private Sub TxtContraseña_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtContraseña.KeyPress
+        If C_validaciones.EsNumero(Asc(e.KeyChar)) Then
+            If Asc(e.KeyChar) = 13 Then
+                TxtContraseña.Text = UCase(TxtContraseña.Text)
+                Button1.Focus()
+                'c_Varias.Tabula()
+            End If
+        Else
+            e.Handled = True
+        End If
+    End Sub
+
+
 End Class
